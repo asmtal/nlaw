@@ -9,7 +9,7 @@ node_count = 10
 rotate = "*/5 * * * *"
 
 # Де ціль взяти
-target_source = "https://gist.githubusercontent.com/sbondarenko/6f8fbd23e52f6f993fc96ec3ce1572b5/raw/efa63ca6d2a05a1eee2e0adaeb36edcb4cb254bc/list.txt"
+target_source = "https://raw.githubusercontent.com/volodymyrdoba/nlaw/master/SOURCE"
 
 # Тип інстанса
 instance_type = "t2.nano"
